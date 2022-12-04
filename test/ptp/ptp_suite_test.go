@@ -7,7 +7,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	client "github.com/redhat-eets/sno-tests/pkg/client"
+	client "github.com/redhat-eets/sno-tests/test/pkg/client"
 	"gopkg.in/yaml.v3"
 )
 

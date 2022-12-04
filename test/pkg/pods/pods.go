@@ -12,7 +12,7 @@ import (
 	"github.com/onsi/gomega"
 	"github.com/openshift/ptp-operator/test/pkg"
 	"github.com/openshift/ptp-operator/test/pkg/images"
-	"github.com/redhat-eets/sno-tests/pkg/client"
+	"github.com/redhat-eets/sno-tests/test/pkg/client"
 	"github.com/sirupsen/logrus"
 	"github.com/test-network-function/l2discovery-lib/pkg/pods"
 	corev1 "k8s.io/api/core/v1"

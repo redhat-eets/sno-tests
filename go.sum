@@ -49,8 +49,9 @@ github.com/buger/jsonparser v1.1.1/go.mod h1:6RYKKt7H4d4+iWqouImQ9R2FZql3VbhNgx2
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghfAqPWnc=
 github.com/cespare/xxhash/v2 v2.1.1/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
-github.com/cespare/xxhash/v2 v2.1.2 h1:YRXhKfTDauu4ajMg1TPgFO5jnlC2HCbmLXMcTG5cbYE=
 github.com/cespare/xxhash/v2 v2.1.2/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
+github.com/cespare/xxhash/v2 v2.2.0 h1:DC2CZ1Ep5Y4k3ZQ899DldepgrayRUGE6BBZ/cd9Cj44=
+github.com/cespare/xxhash/v2 v2.2.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=
@@ -232,8 +233,8 @@ github.com/openshift/api v0.0.0-20220831183848-09c070622e2c h1:7Ar64e7somcImBRqy
 github.com/openshift/api v0.0.0-20220831183848-09c070622e2c/go.mod h1:9JWn+H7X8wEPPc9D63krigXl8r3F1Mt6/lC98brUyhQ=
 github.com/openshift/client-go v0.0.0-20220831193253-4950ae70c8ea h1:7JbjIzWt3Q75ErY1PAZ+gCA+bErI6HSlpffHFmMMzqM=
 github.com/openshift/client-go v0.0.0-20220831193253-4950ae70c8ea/go.mod h1:+J8DqZC60acCdpYkwVy/KH4cudgWiFZRNOBeghCzdGA=
-github.com/openshift/ptp-operator v0.0.0-20221201181332-adcf787e0f29 h1:qOjf6H9LUAi3+HbQhQCVojn1/YBoUflGbBASr1Ea+1A=
-github.com/openshift/ptp-operator v0.0.0-20221201181332-adcf787e0f29/go.mod h1:cdLB4SmFXsuViry3A1/ZPIwtbOwee1+77DcqtVth3hM=
+github.com/openshift/ptp-operator v0.0.0-20221202191712-c098cfbb5677 h1:0tY0tWi0h6tPjydCgJFZJBmwESgenX6cse5gJvCb+pM=
+github.com/openshift/ptp-operator v0.0.0-20221202191712-c098cfbb5677/go.mod h1:h6Pv+e9d57ULa7rdpTFQwkW7iNDJV6X+NN5octbtfsM=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
@@ -285,8 +286,8 @@ github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81P
 github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5cxcmMvtA=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.8.0 h1:pSgiaMZlXftHpm5L7V1+rVB+AZJydKsMxsQBIJw4PKk=
-github.com/test-network-function/l2discovery-lib v0.0.4 h1:EggRNkFC8JiaAg0eqvYOHJE3+tsBO4cd7zh8B5J6xXU=
-github.com/test-network-function/l2discovery-lib v0.0.4/go.mod h1:h3UimGqykQ92YTeCsQekV3pU+rFcPOmPxS2ZEFhxSY0=
+github.com/test-network-function/l2discovery-lib v0.0.5 h1:rgH5Y7lIu0R7L4uXEu2f9UAL9DTZ+vaUGuKBjy+UMY0=
+github.com/test-network-function/l2discovery-lib v0.0.5/go.mod h1:h3UimGqykQ92YTeCsQekV3pU+rFcPOmPxS2ZEFhxSY0=
 github.com/test-network-function/privileged-daemonset v0.0.5 h1:0afeyGyrS5zAaMIT0Yp/scOzkUlGgZqjjBThd2MLmRQ=
 github.com/test-network-function/privileged-daemonset v0.0.5/go.mod h1:u9QKZcNRCb6Idf9MtaHe19XshRIGDzLZjk54vfmJUrk=
 github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f/go.mod h1:N2zxlSyiKSe5eX1tZViRH5QA0qijqEDrYZiPEAiq3wU=
