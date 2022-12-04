@@ -21,7 +21,6 @@ var _ = Describe("T-GM", func() {
 		if topo.PTP.GM.Node == "" {
 			Skip("T-GM node not provided")
 		}
-		Expect(clients["GM"].Client).NotTo(BeNil())
 	})
 
 	Context("WPC GNSS verifications", func() {
