@@ -43,7 +43,7 @@ func GetLog(api *client.ClientSet, p *corev1.Pod, containerName string) (string,
 }
 
 // ExecCommand runs command in the pod and returns buffer output
-func ExecCommand(api *client.ClientSet, cs *client.ClientSet, pod *corev1.Pod, containerName string, command []string) (bytes.Buffer, error) {
+func ExecCommand(api *client.ClientSet, pod *corev1.Pod, containerName string, command []string) (bytes.Buffer, error) {
 	var buf bytes.Buffer
 	req := api.CoreV1().RESTClient().
 		Post().
@@ -60,7 +60,7 @@ func ExecCommand(api *client.ClientSet, cs *client.ClientSet, pod *corev1.Pod, c
 			TTY:       true,
 		}, scheme.ParameterCodec)
 
-	exec, err := remotecommand.NewSPDYExecutor(cs.Config, "POST", req.URL())
+	exec, err := remotecommand.NewSPDYExecutor(api.Config, "POST", req.URL())
 	if err != nil {
 		return buf, err
 	}
