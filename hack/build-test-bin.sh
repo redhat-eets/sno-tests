@@ -23,8 +23,8 @@ mkdir -p bin
 function build_and_move_suite {
 	suite=$1
 	target=$2
-	ginkgo build ./"$suite"
-	mv ./"$suite"/"$suite".test "$target"
+	ginkgo build ./test/"$suite"
+	mv ./test/"$suite"/"$suite".test "$target"
 }
 
 build_and_move_suite "ptp" "./bin/ptptests"
