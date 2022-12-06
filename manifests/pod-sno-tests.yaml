@@ -9,9 +9,6 @@ spec:
   containers:
   - name: sno-tests 
     image: 192.168.49.147:5000/ptp-test:latest
-    command:
-      - ptptests 
-      - "-test.v"
     securityContext:
       privileged: true
     volumeMounts:
