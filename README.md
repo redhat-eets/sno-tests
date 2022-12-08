@@ -2,7 +2,7 @@
 
 ## DNS entries on the test machine
 
-In order for the script to control multple SNO clusters, the test machine where the script is running should be able to resolve the DNS names for the different SNO clusters, for example, here is a sample `/etc/hosts` extra entries on the test machine, in addition to the pre-existing entries,
+In order for the script to control multiple SNO clusters, the test machine where the script is running should be able to resolve the DNS names for the different SNO clusters. For example, here are sample `/etc/hosts` entries on the test machine, added in addition to the pre-existing entries,
 
 ```
 $ cat /etc/hosts
@@ -23,28 +23,28 @@ $ cat /etc/hosts
 192.168.49.141	alertmanager-main-openshift-monitoring.apps.node12.wpc.test
 ```
 
-## Running test directly from git source tree
+## Running tests directly from git source tree
 
-First git clone the source tree.
+First, git clone the source tree.
 
-Install  ginkgo and gomega,
+Install Ginkgo and Gomega,
 
 ```
 go install github.com/onsi/ginkgo/v2/ginkgo
 go get github.com/onsi/gomega/...
 ```
 
-Create a directory to host the SNO kubeconfig topology files. By default the ginkgo script expects to find these files under `/testconfig` directory. This directory path can be changed by the enviroment var `CFG_DIR`.
+Create a directory to host the SNO kubeconfig topology files. By default, the ginkgo script expects to find these files under the `/testconfig` directory. This directory path can be changed by the environment var `CFG_DIR`.
 
-Here is an example list of files under this configuration directory,
+Here is an example list of the files under this configuration directory,
 ```
 # ls /testconfig/
 node12  node2  topology.yaml
 ```
 
-In the above listing, the `node12` file and `node2` file are the kubeconfig files for SNO node12 and SNO node2. These kubeconfig file name can be different than the node name, for example, `cluster12` for node12, `cluster2` for node2.  The `topology.yaml` is the file is used to describe the roles and port connections, and this file name can not be changed.
+In the above listing, the `node12` and `node2` files are the kubeconfig files for SNO node12 and SNO node2, respectively. These kubeconfig file names can be different than the node name, for example, `cluster12` for node12, `cluster2` for node2.  `topology.yaml` is the file is used to describe the roles and port connections, and this file name can not be changed.
 
-Let's take a look of the content of a sample `topology.yaml`:
+Let's take a look of the content of a sample `topology.yaml` file:
 ```
 ptp:
   gm:
@@ -55,13 +55,13 @@ ptp:
     toGM: ens2f3
 ```
 
-This describe two roles will be used for the PTP tests, "gm" role and "tester" role. The "gm" role should be straghtforward - a T-GM. The "tester" role needs some explanation - just like the "gm", the "tester" also has a WPC NIC installed and with GNSS connected. The "tester" can be running in "free run" mode and uses its GPS to check the T-GM PTP timing accuracy. The "tester" can also be running the same functionality as a normal "slave" clock and sync up to the "gm" via PTP.
+This describes two roles which will be used for the PTP tests: "gm" role and "tester" role. The "gm" role should be straightforward - a T-GM. The "tester" role needs some explanation - just like the "gm", the "tester" also has a WPC NIC installed with GNSS connected. The "tester" can be running in "free run" mode and uses its GPS to check the T-GM PTP timing accuracy. The "tester" can also be running the same functionality as a normal "slave" clock and sync up to the "gm" via PTP.
 
 Each role has some ports connecting to other roles. Under the "gm", `toTester` means which port on the "gm" is used to connect the "tester"; under the "tester", `toGM` means which port on the "tester" is used to connect the "gm".
 
-If the test enviroment does not have a second server with the GNSS connection, that's fine - certain tests cases will simply be skipped.
+If the test environment does not have a second server with a GNSS connection, that's fine - certain test cases will simply be skipped.
 
-If the test enviroment has only one single SNO and still want to test the WPC GNSS function on that single SNO, it can be done with a sample `topology.yaml` like below,
+If the test environment has only one single SNO and still want to test the WPC GNSS function on that single SNO, it can be done with a `topology.yaml` like the sample below,
 ```
 ptp:
   gm:
@@ -69,16 +69,16 @@ ptp:
     toTester: ens7f3    # A WPC port is needed even if the ethernet port is not connected
 ```
 
-In the above topology file, there is one single gm role for the single SNO. In order to test the GNSS, `toTester` is still specified, even though no "tester" is defined. The `toTester` ethernet port does not need to be connected or up. The ginkgo script uses the `toTester` to find the intended WPC PCI address and query the GNSS module.  
+In the above topology file, there is one single gm role for the single SNO. In order to test the GNSS, `toTester` is still specified, even though no "tester" is defined. The `toTester` ethernet port does not need to be connected or up. The Ginkgo script uses the `toTester` field to find the intended WPC PCI address and query the GNSS module.  
 
-With the above files under the `/testconfig` directory, the ginkgo test suite can be triggered,
+With the above files under the `/testconfig` directory, the Ginkgo test suite can be triggered,
 ```
  ginkgo -v
  ```
 
-## Running test from a test container
+## Running tests from a test container
 
-The ginkgo test suites can be built into a binary and run from inside a container.
+The Ginkgo test suites can be built into a binary and run from inside a container.
 
 Here is an example to build the test container image and push to a private docker image repository, from the git tree root directory, 
 ```
@@ -86,14 +86,12 @@ podman build -t 192.168.49.147:5000/ptp-test .
 podman push 192.168.49.147:5000/ptp-test --tls-verify=false
 ```
 
-When the test container is running from an OpenShift cluster, in order to be able to resolve the DNS query for multiple SNO clusters, extra DNS entries can be added to the `/etc/hosts` inside the container. Basically the test container need to be able access the following information:
+In order to be able to resolve the DNS query for multiple SNO clusters when the test container is running from an OpenShift cluster, extra DNS entries can be added to the `/etc/hosts` inside the container. Basically, the test container needs to be able access the following information:
 * kubeconfig file for each SNO custer
-* toplogy file
+* topology file
 * extra DNS entries for each SNO cluster and saved in `dns-entries`
 
-A config map can be used to pass in all these information.
-
-Here is an example to build this config map.
+A config map can be used to pass in all this information, as in the below example,
 ```
 # ls ptp-testconfig
 dns-entries  node12  node2  topology.yaml
@@ -121,9 +119,9 @@ In the above steps, we can see there is a extra file called `dns-entries` under 
 192.168.49.141	alertmanager-main-openshift-monitoring.apps.node12.wpc.test
 ```
 
-Essentially these entries are the same as the extra /etc/hosts entries when we run the "ginkgo" test directly from git source tree.
+Essentially these entries are the same as the extra `/etc/hosts` entries necessary when we run the "ginkgo" tests directly from git source tree.
 
-This is an sample yaml file to run the test container image inside openshift,
+This is a sample YAML file to run the test container image inside openshift,
 ```
 # the configmap test-config is created with
 # oc create configmap test-config --from-file=<dir>
@@ -147,7 +145,7 @@ spec:
         name: test-config
 ```
 
-After the pods run and completes, get the test result via the pod log,
+After the pods run and complete, get the test result via the pod log,
 ```
 # oc get pods
 NAME        READY   STATUS      RESTARTS   AGE
