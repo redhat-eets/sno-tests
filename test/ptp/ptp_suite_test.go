@@ -77,6 +77,12 @@ var _ = BeforeSuite(func() {
 	}
 
 	for _, role := range roles {
+		if _, ok := info[role]; !ok {
+			clients[role] = nil
+			nodenames[role] = ""
+			continue
+		}
+
 		if len(info[role]) > 1 {
 			nodenames[role] = info[role][1]
 		} else {
