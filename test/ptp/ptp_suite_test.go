@@ -7,7 +7,6 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/go-git/go-git/v5"
 	client "github.com/redhat-eets/sno-tests/test/pkg/client"
 	"gopkg.in/yaml.v3"
 )
@@ -23,6 +22,8 @@ var (
 	clients   map[string]*client.ClientSet
 	nodenames map[string]string
 	roles     = [...]string{"GM", "Tester"}
+	link	  string
+	origin_url string
 )
 
 type Topology struct {
@@ -43,23 +44,12 @@ func TestPtp(t *testing.T) {
 	RunSpecs(t, "Ptp Suite")
 }
 
-var replacer = strings.NewReplacer("git@", "https://", ":", "/", ".git", "/tree/")
-
 var _ = BeforeSuite(func() {
 	// Get the current git hash and link
-	r, err := git.PlainOpenWithOptions(".", &git.PlainOpenOptions{
-		DetectDotGit: true,
-	})
-	if err == nil {
-		ref_head, err_head := r.Head()
-		ref_origin, err_origin := r.Remotes()
-		if err_head == nil && err_origin == nil {
-			commit_hash := strings.Fields(ref_head.String())[0]
-			origin_url := replacer.Replace(strings.Fields(ref_origin[0].String())[1])
-			origin_url = origin_url + commit_hash
-			GinkgoWriter.Println("Local Test Suite Link: ", origin_url)
-		}
+	if origin_url == "" {
+		origin_url = getOriginUrl()
 	}
+	GinkgoWriter.Println("Local Test Suite Link: ", origin_url)
 	// Get the config file location from enviroment
 	val, ok := os.LookupEnv("CFG_DIR")
 	if !ok {

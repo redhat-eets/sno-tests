@@ -8,6 +8,7 @@ import (
 	"github.com/redhat-eets/sno-tests/test/pkg/pods"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
+	"github.com/go-git/go-git/v5"
 )
 
 func getDevInfo(api *client.ClientSet, intf string, ptpPod *corev1.Pod) (vendor, device, ttyGNSS string) {
@@ -39,5 +40,29 @@ func getDevInfo(api *client.ClientSet, intf string, ptpPod *corev1.Pod) (vendor,
 	outstring = buf3.String()
 	vendor = strings.TrimSpace(outstring)
 	logrus.Infof("vendor: %s, device ID: %s, ttyGNSS: %s", vendor, device, ttyGNSS)
+	return
+}
+
+func getOriginUrl() (origin_url string) {
+	var replacer = strings.NewReplacer("git@", "https://", ":", "/", ".git", "/tree/")
+	r, err := git.PlainOpenWithOptions(".", &git.PlainOpenOptions{
+                        DetectDotGit: true,
+        })
+        if err == nil {
+                ref_head, err_head := r.Head()
+                ref_origin, err_origin := r.Remotes()
+		if err_origin == nil {
+			origin_url = replacer.Replace(strings.Fields(ref_origin[0].String())[1])
+			if err_head == nil {
+				commit_hash := strings.Fields(ref_head.String())[0]
+				origin_url = origin_url + commit_hash
+			}
+                }
+        }
+
+	if origin_url == "" {
+		origin_url = "Not Found"
+	}
+
 	return
 }
