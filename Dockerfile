@@ -1,4 +1,4 @@
-FROM golang:1.19 AS builder
+FROM quay.io/projectquay/golang:1.19 AS builder
 WORKDIR /usr/src/github.com/redhat-eets/sno-tests
 COPY . .
 RUN go mod tidy && make test-bin
