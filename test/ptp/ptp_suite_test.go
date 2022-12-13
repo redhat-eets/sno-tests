@@ -22,7 +22,6 @@ var (
 	clients   map[string]*client.ClientSet
 	nodenames map[string]string
 	roles     = [...]string{"GM", "Tester"}
-	link	  string
 	origin_url string
 )
 
