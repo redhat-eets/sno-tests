@@ -22,6 +22,7 @@ var (
 	clients   map[string]*client.ClientSet
 	nodenames map[string]string
 	roles     = [...]string{"GM", "Tester"}
+	origin_url string
 )
 
 type Topology struct {
@@ -43,6 +44,11 @@ func TestPtp(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
+	// Get the current git hash and link
+	if origin_url == "" {
+		origin_url = getOriginUrl()
+	}
+	GinkgoWriter.Println("Local Test Suite Link: ", origin_url)
 	// Get the config file location from enviroment
 	val, ok := os.LookupEnv("CFG_DIR")
 	if !ok {
