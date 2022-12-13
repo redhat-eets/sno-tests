@@ -2,13 +2,13 @@ package ptp_test
 
 import (
 	"strings"
-
 	"github.com/openshift/ptp-operator/test/pkg"
 	"github.com/redhat-eets/sno-tests/test/pkg/client"
 	"github.com/redhat-eets/sno-tests/test/pkg/pods"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"github.com/go-git/go-git/v5"
+	. "github.com/onsi/ginkgo/v2"
 )
 
 func getDevInfo(api *client.ClientSet, intf string, ptpPod *corev1.Pod) (vendor, device, ttyGNSS string) {
@@ -44,21 +44,49 @@ func getDevInfo(api *client.ClientSet, intf string, ptpPod *corev1.Pod) (vendor,
 }
 
 func getOriginUrl() (origin_url string) {
-	var replacer = strings.NewReplacer("git@", "https://", ":", "/", ".git", "/tree/")
+	var tree_replacer = strings.NewReplacer("git@", "https://", ":", "/", ".git", "/tree/")
+	var tag_replacer = strings.NewReplacer("git@", "https://", ":", "/", ".git", "/releases/tag/")
 	r, err := git.PlainOpenWithOptions(".", &git.PlainOpenOptions{
                         DetectDotGit: true,
         })
         if err == nil {
-                ref_head, err_head := r.Head()
+		commit_hash := ""
                 ref_origin, err_origin := r.Remotes()
 		if err_origin == nil {
-			origin_url = replacer.Replace(strings.Fields(ref_origin[0].String())[1])
+			origin_url = tree_replacer.Replace(strings.Fields(ref_origin[0].String())[1])
+			ref_head, err_head := r.Head()
 			if err_head == nil {
-				commit_hash := strings.Fields(ref_head.String())[0]
+				commit_hash = strings.Fields(ref_head.String())[0]
 				origin_url = origin_url + commit_hash
+			} else {
+				GinkgoWriter.Println(err_head)
 			}
-                }
-        }
+
+			tags, tags_err := r.Tags()
+			if tags_err == nil {
+				for {
+					tag, tag_err := tags.Next()
+					if tag_err == nil {
+						tag_string := tag.Strings()
+						if tag_string[1] == commit_hash {
+							origin_url = tag_replacer.Replace(strings.Fields(ref_origin[0].String())[1])
+							origin_url = origin_url + tag_string[0]
+							break
+						}
+					} else {
+						// Expected EOF upon end of Tags iterator
+						break
+					}
+				}
+			} else {
+				GinkgoWriter.Println("Tags Error:", tags_err)
+			}
+                } else {
+			GinkgoWriter.Println("Remotes Error:", err_origin)
+		}
+        } else {
+		GinkgoWriter.Println("Repository Error:", err)
+	}
 
 	if origin_url == "" {
 		origin_url = "Not Found"
