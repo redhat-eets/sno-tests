@@ -1,0 +1,187 @@
+package namespaces
+
+import (
+	"context"
+	"strings"
+	"time"
+
+	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
+
+	gomega "github.com/onsi/gomega"
+	k8sv1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/utils/pointer"
+
+	"github.com/redhat-eets/sno-tests/test/pkg/client"
+)
+
+var namespaceLabels = map[string]string{
+	"pod-security.kubernetes.io/audit":               "privileged",
+	"pod-security.kubernetes.io/enforce":             "privileged",
+	"pod-security.kubernetes.io/warn":                "privileged",
+	"security.openshift.io/scc.podSecurityLabelSync": "false",
+}
+
+// GetPSALabels returns a map of PSA labels.
+func GetPSALabels() map[string]string {
+	psaMap := make(map[string]string)
+	for k, v := range namespaceLabels {
+		psaMap[k] = v
+	}
+
+	return psaMap
+}
+
+// WaitForDeletion waits until the namespace will be removed from the cluster
+func WaitForDeletion(cs corev1client.NamespacesGetter, nsName string, timeout time.Duration) error {
+	return wait.PollImmediate(time.Second, timeout, func() (bool, error) {
+		_, err := cs.Namespaces().Get(context.Background(), nsName, metav1.GetOptions{})
+		if k8serrors.IsNotFound(err) {
+			return true, nil
+		}
+		return false, nil
+	})
+}
+
+// Create creates a new namespace with the given name.
+// If the namespace exists, it returns.
+func Create(namespace string, cs corev1client.NamespacesGetter) error {
+	_, err := cs.Namespaces().Create(
+		context.Background(),
+		&k8sv1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:   namespace,
+				Labels: namespaceLabels,
+			}},
+		metav1.CreateOptions{})
+
+	if k8serrors.IsAlreadyExists(err) {
+		return AddPSALabelsToNamespace(namespace, cs)
+	}
+	return err
+}
+
+// AddPSALabelsToNamespace adds PSA labels to an existing namespace.
+func AddPSALabelsToNamespace(namespace string, cs corev1client.NamespacesGetter) error {
+	ns, err := cs.Namespaces().Get(context.Background(), namespace, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+
+	if ns.Labels == nil {
+		ns.Labels = make(map[string]string)
+	}
+	for k, v := range GetPSALabels() {
+		ns.Labels[k] = v
+	}
+
+	_, err = cs.Namespaces().Update(context.Background(), ns, metav1.UpdateOptions{})
+	return err
+}
+
+// Delete deletes a namespace with the given name, and waits for it's deletion.
+// If the namespace not found, it returns.
+func Delete(namespace string, cs *client.ClientSet) error {
+	err := cs.Namespaces().Delete(context.Background(), namespace, metav1.DeleteOptions{})
+	if err != nil && !k8serrors.IsNotFound(err) {
+		return err
+	}
+
+	err = WaitForDeletion(cs, namespace, 5*time.Minute)
+	return err
+}
+
+// Clean cleans all dangling objects from the given namespace.
+func Clean(namespace string, prefix string, cs *client.ClientSet) error {
+	_, err := cs.Namespaces().Get(context.Background(), namespace, metav1.GetOptions{})
+	if err != nil && k8serrors.IsNotFound(err) {
+		return nil
+	}
+
+	policies, err := cs.NetworkPolicies(namespace).List(context.Background(), metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
+	for _, p := range policies.Items {
+		if strings.HasPrefix(p.Name, prefix) {
+			err = cs.NetworkPolicies(namespace).Delete(context.Background(), p.Name, metav1.DeleteOptions{
+				GracePeriodSeconds: pointer.Int64(0),
+			})
+			if err != nil && !k8serrors.IsNotFound(err) {
+				return err
+			}
+		}
+	}
+
+	pods, err := cs.Pods(namespace).List(context.Background(), metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
+	for _, pod := range pods.Items {
+		if strings.HasPrefix(pod.Name, prefix) {
+			err = cs.Pods(namespace).Delete(context.Background(), pod.Name, metav1.DeleteOptions{
+				GracePeriodSeconds: pointer.Int64(0),
+			})
+			if err != nil && !k8serrors.IsNotFound(err) {
+				return err
+			}
+		}
+	}
+
+	allServices, err := cs.Services(namespace).List(context.Background(), metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
+
+	for _, s := range allServices.Items {
+		if strings.HasPrefix(s.Name, prefix) {
+
+			err = cs.Services(namespace).Delete(context.Background(), s.Name, metav1.DeleteOptions{
+				GracePeriodSeconds: pointer.Int64(0)})
+			if err != nil && k8serrors.IsNotFound(err) {
+				continue
+			}
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return err
+}
+
+// Exists tells whether the given namespace exists
+func Exists(namespace string, cs corev1client.NamespacesGetter) bool {
+	_, err := cs.Namespaces().Get(context.Background(), namespace, metav1.GetOptions{})
+	return err == nil || !k8serrors.IsNotFound(err)
+}
+
+type NamespacesAndPods interface {
+	Namespaces() corev1client.NamespaceInterface
+	Pods(namespace string) corev1client.PodInterface
+}
+
+// CleanPods deletes all pods in namespace
+func CleanPods(namespace string, cs NamespacesAndPods) {
+	if !Exists(namespace, cs) {
+		return
+	}
+	err := cs.Pods(namespace).DeleteCollection(context.Background(), metav1.DeleteOptions{
+		GracePeriodSeconds: pointer.Int64(0),
+	}, metav1.ListOptions{})
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+
+	gomega.Eventually(func(g gomega.Gomega) int {
+		podsList, err := cs.Pods(namespace).List(context.Background(), metav1.ListOptions{})
+		gomega.Expect(err).ToNot(gomega.HaveOccurred())
+		return len(podsList.Items)
+	}, 3*time.Minute, 10*time.Second).Should(gomega.BeZero())
+}
+
+// CleanPodsIn deletes all pods in the given namespace list
+func CleanPodsIn(cs NamespacesAndPods, namespaces ...string) {
+	for _, ns := range namespaces {
+		CleanPods(ns, cs)
+	}
+}
