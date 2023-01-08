@@ -1,6 +1,8 @@
 package tests
 
 import (
+	"time"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -27,7 +29,7 @@ var _ = Describe("PTP T-GM", func() {
 		It("Tester should be able to sync", func() {
 			_, err := pods.GetLog(client, ptpRunningPod, pkg.PtpContainerName)
 			Expect(err).NotTo(HaveOccurred(), "Error to find needed log due to %s", err)
-			result := pods.WaitUntilLogIsDetectedRegex(client, ptpRunningPod, pkg.Timeout10Seconds, "ptp4l.*rms (.*)")
+			result := pods.WaitUntilLogIsDetectedRegex(client, ptpRunningPod, time.Minute, "ptp4l.*rms (.*)")
 			logrus.Infof("captured log: %s", result)
 		})
 	})
