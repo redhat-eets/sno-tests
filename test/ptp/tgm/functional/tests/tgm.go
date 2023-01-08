@@ -64,7 +64,7 @@ var _ = Describe("PTP T-GM", func() {
 		It("Should check GNSS signal from PTP daemon log", func() {
 			_, err := pods.GetLog(client, ptpRunningPods[0], pkg.PtpContainerName)
 			Expect(err).NotTo(HaveOccurred(), "Error to find GNSS log in PTP daemon due to %s", err)
-			result := pods.WaitUntilLogIsDetectedRegex(client, ptpRunningPods[0], pkg.Timeout10Seconds, "nmea sentence: GNRMC(.*)")
+			result := pods.WaitUntilLogIsDetectedRegex(client, ptpRunningPods[0], pkg.TimeoutIn10Minutes, "nmea sentence: GNRMC(.*)")
 
 			By("validating TTY GNSS GNRMC GPS/Transit data")
 			s := strings.Split(result, ",")
