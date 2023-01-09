@@ -110,6 +110,34 @@ func InitWPCDevicePort(client *client.ClientSet, hostPod *corev1.Pod) error {
 	return nil
 }
 
+// GetDevCGU returns the device CGU of an interface.
+// Needs a pod with a host mount to get the inforamtion.
+func GetDevCGU(client *client.ClientSet, intf string, hostPod *corev1.Pod) (string, error) {
+	command := []string{
+		"chroot", "/host", "readlink", "/sys/class/net/" + intf + "/device",
+	}
+	buf, err := pods.ExecCommand(client, hostPod, hostPod.Spec.Containers[0].Name, command)
+	outstring := buf.String()
+	if err != nil {
+		return "", fmt.Errorf("error to get busID due to: %s %s", err, outstring)
+	}
+
+	s := strings.Split(strings.TrimSpace(outstring), "/")
+	busID := s[len(s)-1]
+
+	commands := []string{
+		"chroot", "/host", "cat", "/sys/kernel/debug/ice/" + busID + "/cgu",
+	}
+
+	buf, err = pods.ExecCommand(client, hostPod, hostPod.Spec.Containers[0].Name, commands)
+	outstring = buf.String()
+	if err != nil {
+		return "", fmt.Errorf("failed to get CGU for device %s due to: %s %s", intf, err, outstring)
+	}
+
+	return outstring, nil
+}
+
 // getDevType returns the device type of an interface.
 // Needs a pod with a host mount to get the inforamtion.
 func getDevType(client *client.ClientSet, intf string, hostPod *corev1.Pod) (string, error) {
