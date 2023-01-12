@@ -8,6 +8,7 @@ import (
 	clientconfigv1 "github.com/openshift/client-go/config/clientset/versioned/typed/config/v1"
 	apiext "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	appsv1client "k8s.io/client-go/kubernetes/typed/apps/v1"
 	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -16,8 +17,8 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	ptpapiv1 "github.com/openshift/ptp-operator/api/v1"
 	ptpv1 "github.com/openshift/ptp-operator/pkg/client/clientset/versioned/typed/ptp/v1"
-	"k8s.io/client-go/kubernetes"
 )
 
 type ClientSet struct {
@@ -67,6 +68,10 @@ func New(kubeconfig string) *ClientSet {
 	}
 
 	if err := apiext.AddToScheme(myScheme); err != nil {
+		panic(err)
+	}
+
+	if err := ptpapiv1.AddToScheme(myScheme); err != nil {
 		panic(err)
 	}
 
