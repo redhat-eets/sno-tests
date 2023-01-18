@@ -198,7 +198,7 @@ func getDefinition(namespace string) *corev1.Pod {
 			GenerateName: "testpod-",
 			Namespace:    namespace},
 		Spec: corev1.PodSpec{
-			TerminationGracePeriodSeconds: pointer.Int64Ptr(0),
+			TerminationGracePeriodSeconds: pointer.Int64(0),
 			Containers: []corev1.Container{{Name: "test",
 				Image:   images.For(images.TestUtils),
 				Command: []string{"/bin/bash", "-c", "sleep INF"}}}}}
@@ -213,29 +213,73 @@ func DefinePodOnNode(namespace string, nodeName string) *corev1.Pod {
 	return pod
 }
 
-// RedefineAsPrivileged updates the pod definition to be privileged
-func RedefineAsPrivileged(pod *corev1.Pod, containerName string) (*corev1.Pod, error) {
-	c := containerByName(pod, containerName)
-	if c == nil {
-		return pod, fmt.Errorf("container with name: %s not found in pod", containerName)
+// DefinePodOnHost creates the pod defintion with a mount to host
+func DefinePodOnHost(namespace string) (*corev1.Pod, error) {
+	pod := getDefinition(namespace)
+
+	pod = RedefineWithMount(pod, pod.Spec.Containers[0].Name,
+		corev1.Volume{
+			Name: "host",
+			VolumeSource: corev1.VolumeSource{
+				HostPath: &corev1.HostPathVolumeSource{
+					Path: "/",
+				},
+			}},
+		corev1.VolumeMount{
+			Name:      "host",
+			MountPath: "/host"})
+
+	pod, err := RedefineAsPrivileged(pod, pod.Spec.Containers[0].Name)
+	if err != nil {
+		return nil, err
 	}
-	if c.SecurityContext == nil {
-		c.SecurityContext = &corev1.SecurityContext{}
-	}
-	c.SecurityContext.Privileged = pointer.BoolPtr(true)
 
 	return pod, nil
 }
-func containerByName(pod *corev1.Pod, containerName string) *corev1.Container {
-	if containerName == "" {
-		return &pod.Spec.Containers[0]
-	}
 
-	for _, c := range pod.Spec.Containers {
+// RedefineWithMount updates the container definition with a volume and volume mount
+func RedefineWithMount(pod *corev1.Pod, containerName string, volume corev1.Volume, mount corev1.VolumeMount) *corev1.Pod {
+	for i, c := range pod.Spec.Containers {
 		if c.Name == containerName {
-			return &c
+			pod.Spec.Containers[i].VolumeMounts = []corev1.VolumeMount{mount}
+			pod.Spec.Volumes = []corev1.Volume{volume}
 		}
 	}
 
-	return nil
+	return pod
+}
+
+// RedefineAsPrivileged updates the container definition to be privileged
+func RedefineAsPrivileged(pod *corev1.Pod, containerName string) (*corev1.Pod, error) {
+	b := true
+	for i, c := range pod.Spec.Containers {
+		if c.Name == containerName {
+			pod.Spec.Containers[i].SecurityContext = &corev1.SecurityContext{
+				Privileged: &b,
+			}
+		}
+	}
+
+	return pod, nil
+}
+
+// GetPTPDaemonPod returns the ptp daemon pod running on the SNO.
+// returns the first element from the pods list since there is only pod, one daemon per node.
+func GetPTPDaemonPod(api *client.ClientSet) (*corev1.Pod, error) {
+	ptpRunningPods := []*corev1.Pod{}
+
+	ptpPods, err := api.CoreV1().Pods(pkg.PtpLinuxDaemonNamespace).List(context.Background(), metav1.ListOptions{LabelSelector: "app=linuxptp-daemon"})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(ptpPods.Items) == 0 {
+		return nil, fmt.Errorf("linuxptp-daemon is not deployed on cluster")
+	}
+
+	for podIndex := range ptpPods.Items {
+		ptpRunningPods = append(ptpRunningPods, &ptpPods.Items[podIndex])
+	}
+
+	return ptpRunningPods[0], nil
 }
