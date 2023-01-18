@@ -110,6 +110,34 @@ func InitWPCDevicePort(client *client.ClientSet, hostPod *corev1.Pod) error {
 	return nil
 }
 
+// GetDevDPLLInfo returns the device DPLL info for an interface.
+// Needs a pod with a host mount to get the inforamtion.
+func GetDevDPLLInfo(client *client.ClientSet, intf string, hostPod *corev1.Pod) (string, string, error) {
+	commands := []string{
+		"chroot", "/host", "cat", "/sys/class/net/" + intf + "/device/dpll_1_state",
+	}
+
+	buf, err := pods.ExecCommand(client, hostPod, hostPod.Spec.Containers[0].Name, commands)
+	outstring := buf.String()
+	if err != nil {
+		return "", "", fmt.Errorf("failed to get DPLL state for device %s due to: %s %s", intf, err, outstring)
+	}
+	state := strings.TrimSpace(outstring)
+
+	commands = []string{
+		"chroot", "/host", "cat", "/sys/class/net/" + intf + "/device/dpll_1_offset",
+	}
+
+	buf, err = pods.ExecCommand(client, hostPod, hostPod.Spec.Containers[0].Name, commands)
+	outstring = buf.String()
+	if err != nil {
+		return "", "", fmt.Errorf("failed to get DPLL offset for device %s due to: %s %s", intf, err, outstring)
+	}
+	offset := strings.TrimSpace(outstring)
+
+	return state, offset, nil
+}
+
 // getDevType returns the device type of an interface.
 // Needs a pod with a host mount to get the inforamtion.
 func getDevType(client *client.ClientSet, intf string, hostPod *corev1.Pod) (string, error) {
