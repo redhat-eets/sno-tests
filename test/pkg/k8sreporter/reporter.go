@@ -66,6 +66,7 @@ func New(kubeconfig, path, namespace string) *KubernetesReporter {
 // dumpSubpath is the subpath relative to reportPath where the reporter will
 // dump the output.
 func (r *KubernetesReporter) Dump(duration time.Duration, testName string) {
+	// nolint:staticcheck
 	dumpSubpath := strings.Replace(ginkgo.CurrentGinkgoTestDescription().TestText, " ", "-", -1)
 
 	since := time.Now().Add(-duration).Add(-5 * time.Second)
@@ -101,7 +102,7 @@ func (r *KubernetesReporter) logPods(dirName string) {
 			return
 		}
 		defer f.Close()
-		fmt.Fprintf(f, fileSeparator)
+		fmt.Fprint(f, fileSeparator)
 		j, err := json.MarshalIndent(pod, "", "    ")
 		if err != nil {
 			fmt.Println("Failed to marshal pods", err)
@@ -119,7 +120,7 @@ func (r *KubernetesReporter) logNodes(dirName string) {
 		return
 	}
 	defer f.Close()
-	fmt.Fprintf(f, fileSeparator)
+	fmt.Fprint(f, fileSeparator)
 
 	nodes, err := r.clients.Nodes().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
@@ -159,7 +160,7 @@ func (r *KubernetesReporter) logLogs(since time.Time, dirName string) {
 			logStart := metav1.NewTime(since)
 			logs, err := r.clients.Pods(pod.Namespace).GetLogs(pod.Name, &corev1.PodLogOptions{Container: container.Name, SinceTime: &logStart}).DoRaw(context.Background())
 			if err == nil {
-				fmt.Fprintf(f, fileSeparator)
+				fmt.Fprint(f, fileSeparator)
 				fmt.Fprintf(f, "Dumping logs for pod %s-%s-%s\n", pod.Namespace, pod.Name, container.Name)
 				fmt.Fprintln(f, string(logs))
 			}
@@ -176,7 +177,7 @@ func (r *KubernetesReporter) logCustomCR(cr runtimeclient.ObjectList, namespace 
 		return
 	}
 	defer f.Close()
-	fmt.Fprintf(f, fileSeparator)
+	fmt.Fprint(f, fileSeparator)
 	if namespace != nil {
 		fmt.Fprintf(f, "Dumping %T in namespace %s\n", cr, *namespace)
 	} else {
