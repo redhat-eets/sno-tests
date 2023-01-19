@@ -66,8 +66,7 @@ func New(kubeconfig, path, namespace string) *KubernetesReporter {
 // dumpSubpath is the subpath relative to reportPath where the reporter will
 // dump the output.
 func (r *KubernetesReporter) Dump(duration time.Duration, testName string) {
-	// nolint:staticcheck
-	dumpSubpath := strings.Replace(ginkgo.CurrentGinkgoTestDescription().TestText, " ", "-", -1)
+	dumpSubpath := strings.Replace(ginkgo.CurrentSpecReport().FullText(), " ", "-", -1)
 
 	since := time.Now().Add(-duration).Add(-5 * time.Second)
 
