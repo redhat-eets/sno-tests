@@ -49,7 +49,7 @@ var _ = Describe("PTP T-GM Validation", func() {
 			outstring := buf.String()
 			Expect(err).NotTo(HaveOccurred(), "Error to find device driver info due to: %s %s", err, outstring)
 
-			By(fmt.Sprintf("checking the firmware version equals or greater than %.2f", consts.ICEDriverFirmwareVerMinVersion))
+			By(fmt.Sprintf("checking the firmware version equals or greater than %.2f", consts.NVMFirmwareMinVersion))
 			scanner := bufio.NewScanner(strings.NewReader(outstring))
 			for scanner.Scan() {
 				line := scanner.Text()
@@ -57,7 +57,7 @@ var _ = Describe("PTP T-GM Validation", func() {
 					fullFirmwareVer := strings.Split(line, ":")[1]
 					By(fmt.Sprintf("NVM firmware version installed: %s", fullFirmwareVer))
 					firmwareVerNum := strings.Split(fullFirmwareVer, " ")[1]
-					Expect(strconv.ParseFloat(firmwareVerNum, 64)).To(BeNumerically(">=", consts.ICEDriverFirmwareVerMinVersion), "linuxptp-daemon is not deployed on cluster")
+					Expect(strconv.ParseFloat(firmwareVerNum, 64)).To(BeNumerically(">=", consts.NVMFirmwareMinVersion), "NVM Firmware version is older than expected.")
 				}
 			}
 		})
