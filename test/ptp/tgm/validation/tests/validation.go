@@ -57,7 +57,7 @@ var _ = Describe("PTP T-GM Validation", func() {
 					fullFirmwareVer := strings.Split(line, ":")[1]
 					By(fmt.Sprintf("NVM firmware version installed: %s", fullFirmwareVer))
 					firmwareVerNum := strings.Split(fullFirmwareVer, " ")[1]
-					Expect(strconv.ParseFloat(firmwareVerNum, 64)).To(BeNumerically(">=", consts.NVMFirmwareMinVersion), "linuxptp-daemon is not deployed on cluster")
+					Expect(strconv.ParseFloat(firmwareVerNum, 64)).To(BeNumerically(">=", consts.NVMFirmwareMinVersion), "NVM Firmware version is older than expected.")
 				}
 			}
 		})
